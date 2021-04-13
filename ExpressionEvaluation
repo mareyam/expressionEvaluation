@@ -1,0 +1,335 @@
+
+
+
+
+
+//package ass2;
+import java.util.Scanner;
+
+public class expressionEvaluation 
+{
+    public static char[] postExpression = new char[20];
+    public static char[] Expression;              
+    public static int[] Stack = new int[20];
+    public static int counterForInput = 0;
+    public static Scanner input = new Scanner(System.in);
+    public static  Stack stk = new Stack();
+    
+    
+    public static void main(String args[])
+    { 
+        if(isExpressionValid())                     //if the expression is valid only then proceed to the next methods
+        {
+            conversionToPostFix();
+            if(evaluatePostFixExpression())
+                  System.out.println("Expression has been evaluated successfully");
+            else
+             System.out.println("Expression evaulation failed!");
+        }
+        
+        else                                        //expression is not valid
+        {
+            System.out.println("Entered expression is not valid");
+        }  
+    }
+    
+    public static boolean isExpressionValid()
+    {
+        int top = 0;                                  //top for validityStack
+        
+        /*
+         line 58-66 
+         Will input String type Expression
+         & Change it into Char type array
+        */
+        
+        
+       System.out.println("Please enter a string for expression evulation");     
+       String str = input.nextLine();            
+        Expression = new char[str.length()];
+        char[] validityStack = new char[str.length()];
+       for(int i=0;i<str.length();i++)
+       {
+           Expression[i] = str.charAt(i);
+           counterForInput++;
+       } 
+       /*
+       if starting brackets, insert in stack
+       */
+       
+       for(int i=0; i<counterForInput;i++)
+       {
+           if(Expression[i]=='(' || Expression[i] == '{' || Expression[i] == '[')
+            {
+                validityStack[top++] = Expression[i]; 
+                continue;
+            }
+           
+           /*
+           If two operators are inserted together;
+           2(5++5)
+           Return false
+           */
+           
+            if(Expression[i] == '+' || Expression[i] == '-' ||
+               Expression[i] == '*' ||  Expression[i] == '/')
+               
+            {
+                 if(Expression[i+1] == '+' || Expression[i+1] == '-' ||
+                    Expression[i+1] == '*' ||  Expression[i+1] == '/')
+                     {
+                          System.out.println(Expression[i] + " and " + Expression[i+1] + " can not be inserted together ");
+                         System.out.println("Expression is not correctly formatted"); 
+			 return false;
+                     }
+                    
+             }
+            /*
+            If the ending brackets dont match the starting ones
+            */
+            
+            
+          if(Expression[i] == ')' && validityStack[--top] != '(')
+            {
+	         System.out.println("Expression is not correctly formatted"); 
+	         return false;
+            }   
+		
+           
+           if(Expression[i] == '}' && validityStack[--top] != '{')
+                {
+	         System.out.println("Expression is not correctly formatted"); 
+	         return false;
+                 } 
+               
+           if(Expression[i] == ']' && validityStack[--top] != '[')
+                {
+	         System.out.println("Expression is not correctly formatted"); 
+	         return false;
+                } 
+          
+       }
+       //if everything entered is correct, return true and proceed to next method
+       return true;
+    }
+    
+     public static boolean conversionToPostFix()
+    {
+         int j = 0;
+         for(int i=0;i<counterForInput;i++)
+        {
+            
+            /*
+            Line 131 to 134 If Expression[i] is a 0-9 and Expression[i+1]  is any bracket 
+            Insert " * "
+            Line 137 to 141 If Expression[i] is any bracket push in stack
+            Line 149 to 159 If Expression[i] is any operator check precendence according to method insert in stack
+            
+            
+            
+            */
+             if((Expression[i] >= '0' && Expression[i] <= '9') && (Expression[i+1]=='(' || Expression[i+1] == '{' || Expression[i+1] == '['))
+            {
+                stk.push('*');
+            }
+             
+            
+            if(Expression[i]=='(' || Expression[i] == '{' || Expression[i] == '[')
+            {
+                stk.push(Expression[i]);
+                continue;
+            }
+            
+            if(Expression[i] >= '0' && Expression[i] <= '9')
+            {
+                postExpression[j++] = Expression[i];
+                continue;
+            }
+            
+             if((Expression[i] == '+' ) || (Expression[i] == '-' ) || 
+                 (Expression[i] == '*' ) || (Expression[i] == '/' ))
+            {
+                while(getPrecedence((char) stk.getTopStack()) >= Expression[i])
+                  {
+                       postExpression[j++] = (char) stk.pop();
+                  }
+                  
+                stk.push(Expression[i]);
+                continue;
+                  }
+             
+             
+             /*
+             If getTopStack does not matches does not match the required ones keep deleting
+             */
+             
+             if(Expression[i] == ')')
+             {
+                  while (stk.getTopStack() != '(') 
+                  {
+                        postExpression[j++] = (char) stk.pop();
+                        if(Expression[i] == '(')
+                        return true;
+                  }
+             }
+             
+              if(Expression[i] == '}')
+             {
+                  while (stk.getTopStack() != '{') 
+                  {
+                        postExpression[j++] = (char) stk.pop();
+                        if(Expression[i] == '{')
+                        return true;
+                  }
+             }
+              
+               if(Expression[i] == ']')
+             {
+                  while (stk.getTopStack() != '[') 
+                  {
+                        postExpression[j++] = (char) stk.pop();
+                        if(Expression[i] == '[')
+                        return true;
+                  }
+             }
+        }
+             
+      return false;
+      
+         }
+
+     
+     
+     public static boolean evaluatePostFixExpression()
+    {
+        int result = 0;         //storing final result
+        for(int i=0;i<postExpression.length;i++)
+        {
+            if(postExpression[i] >= '0' && postExpression[i] <= '9')
+            {
+               stk.push((char) charToNum(postExpression[i]));
+               continue;
+            }
+            
+            if((postExpression[i] == '+' ) || (postExpression[i] == '-' ) ||
+                (postExpression[i] == '*' ) || (postExpression[i] == '/' ))
+            {
+                int Num2 = stk.pop();
+                int Num1 = stk.pop();
+                if(postExpression[i] =='+')
+                {
+                   stk.push((char) (Num1 + Num2));
+                   result = (Num1+Num2);
+                   continue;
+                }
+                
+                if(postExpression[i] =='-')
+                {
+                    stk.push((char) (Num1 - Num2));
+                    result =(Num1-Num2);
+                   continue;
+                }
+                
+                if(postExpression[i] =='*')
+                {
+                   stk.push((char) (Num1 * Num2));
+                    result = (Num1*Num2);
+                   continue;
+                }
+                
+                if(postExpression[i] =='/')
+                {
+                   stk.push((char) (Num1 / Num2));
+                    result =(Num1/Num2);
+                    continue;
+                }
+        }
+       
+    }
+        System.out.println("Result is:\t"+result);
+          return true;      //if expression evualted successfully
+    }
+            
+         
+     public static int charToNum(char ch)
+    {
+        if(ch=='1') return 1;
+        if(ch=='2') return 2;
+        if(ch=='3') return 3;
+        if(ch=='4') return 4;
+        if(ch=='5') return 5;
+        if(ch=='6') return 6;
+        if(ch=='7') return 7;
+        if(ch=='8') return 8;
+        if(ch=='9') return 9;
+        return 0;
+    }
+            
+
+      public static int getPrecedence(char operator)
+    {
+        if(operator=='-')
+            return 1;
+        if(operator=='+')
+            return 2;
+        if(operator=='*')
+            return 3;
+        if(operator=='/')
+            return 4;
+        return 0;
+    }
+      
+    
+    
+}
+
+class Stack
+{
+    private int top = 0;
+    private int MAX = 100;
+    private char[] stackArr = new char[100];
+    boolean isFull()
+    {
+        if(top >= MAX)
+            return true;
+        return false;
+    }
+    
+    boolean isEmpty()
+    {
+        if(top<=0)
+            return true;
+        return false;
+    }
+    
+    boolean push(char number)
+    {
+       if(!isFull())
+       {
+           stackArr[top++] = number;
+           return true;
+       }
+       return false;
+    }
+    
+    int  pop()
+    {
+       return stackArr[--top];     
+    }
+    
+    int getStack()
+    {
+        for(int i=0;i<top;i++)
+        {
+            System.out.print(stackArr[i]);
+            
+        }
+        System.out.println();
+       return 0;
+    }
+    
+    int getTopStack()
+    {
+        return stackArr[top];
+    }
+}
